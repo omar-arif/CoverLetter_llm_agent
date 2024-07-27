@@ -24,9 +24,21 @@ def ingest_document(stream):
 
 
 
-st.write("Hello! Welcome to my new app")
-uploaded_file = st.file_uploader('upload your resume (pdf or docx file)', type=["pdf","docx"])
-if uploaded_file is not None:
-    resume_text = ingest_document(uploaded_file)
-    st.write(resume_text)
+st.title("Welcome to the AI Cover Letter Generator :sparkles:")
+
+with st.form("my_form"):
+    uploaded_resume = st.file_uploader('Upload your resume :point_down:', type=["pdf","docx"])
+    uploaded_job_description = st.file_uploader('Upload the description of the job you\'re wishing to apply for :point_down:', type=["pdf","docx"])
+    resume_text = ""
+
+    if uploaded_resume is not None:
+        resume_text += ingest_document(uploaded_resume)
+    if uploaded_job_description is not None:
+        resume_text += ingest_document(uploaded_job_description)
+
+    submitted = st.form_submit_button("Generate Cover Letter :printer:")
+    if submitted:
+        st.write(resume_text)
+
+
     
