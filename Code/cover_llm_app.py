@@ -21,7 +21,7 @@ with st.container(border=True):
             uploaded_job_description = st.file_uploader('Upload the description of the job you\'re wishing to apply for :point_down:', type=["pdf","docx"],key="job desc doc upload")
 
         case "Text":
-            filled_job_description = st.text_input('Input the description of the job you\'re wishing to apply for :point_down:')
+            filled_job_description = st.text_area('Input the description of the job you\'re wishing to apply for :point_down:', max_chars=5000)
 
 
 # create a form in order to only run the code below if a submit button is pressed
