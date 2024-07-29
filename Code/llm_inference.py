@@ -1,68 +1,47 @@
 import streamlit as st
-from pypdf import PdfReader
-import docx2txt
-
-def ingest_document(stream):
-    '''
-        A function that takes a BytesIO in-memory stream, decodes the content into a string
-        then returns it.
-        the stream is either from a pdf or a docx file.
-    '''
-
-    # get the uploaded document's extension
-    suffix = stream.name.split(".")[-1]
-    content_text = ""
-
-    match suffix:
-        # extract text if pdf file with pypdf
-        case "pdf":
-            reader = PdfReader(stream) 
-            for page in reader.pages:
-                content_text += page.extract_text(extraction_mode="layout", layout_mode_space_vertically=False, layout_mode_scale_weight=1.0)
-        
-        # extract text if docx file with docx2txt
-        case "docx":
-            content_text = docx2txt.process(stream)
-    
-    return content_text
-
-
+import utils
 
 st.title("Welcome to the AI Cover Letter Generator :sparkles:")
 
-# get resume and cover letter uploaded
-uploaded_resume = st.file_uploader('Upload your resume :point_down:', type=["pdf","docx"], key="resume doc upload")
+# get resume uploaded
+with st.container(border=True):
+    uploaded_resume = st.file_uploader('Upload your resume :point_down:', type=["pdf","docx"], key="resume doc upload")
+
+# get the job description either by uploading a pdf/docx file or by text
 uploaded_job_description = None
 filled_job_description = ""
-option = st.selectbox(
-"How would you like to enter the job description?",
-("pdf/docx", "Text"),)
+    
+with st.container(border=True):
+    option = st.radio(
+    "Job description format",
+    ("pdf/docx", "Text"),)
 
-match option:
+    match option:
+        case "pdf/docx":
+            uploaded_job_description = st.file_uploader('Upload the description of the job you\'re wishing to apply for :point_down:', type=["pdf","docx"],key="job desc doc upload")
 
-    case "pdf/docx":
-        uploaded_job_description = st.file_uploader('Upload the description of the job you\'re wishing to apply for :point_down:', type=["pdf","docx"],key="job desc doc upload")
-
-    case "Text":
-        filled_job_description = st.text_input('Input the description of the job you\'re wishing to apply for :point_down:')
+        case "Text":
+            filled_job_description = st.text_input('Input the description of the job you\'re wishing to apply for :point_down:')
 
 
 # create a form in order to only run the code below if a submit button is pressed
-with st.form("my_form"):
+with st.form("generator_form", border=False):
 
     resume_text = ""
     job_desc_text = ""
     # ingest uploaded documents
     if uploaded_resume is not None:
-        resume_text += ingest_document(uploaded_resume)
+        resume_text += utils.ingest_document(uploaded_resume)
 
     if uploaded_job_description is not None:
-        job_desc_text += ingest_document(uploaded_job_description)
+        job_desc_text += utils.ingest_document(uploaded_job_description)
     elif len(filled_job_description) != 0:
         job_desc_text += filled_job_description
 
     # if the submit button is pressed execute code inside the if statement
-    submitted = st.form_submit_button("Generate Cover Letter :printer:")
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        submitted = st.form_submit_button("Generate Cover Letter :printer:")
     if submitted:
         # display errors if one of the files required is not uploaded
         if uploaded_resume is None:
@@ -70,7 +49,9 @@ with st.form("my_form"):
         elif uploaded_job_description is None and len(filled_job_description)==0:
             st.error("The job description is missing! :rotating_light:")
         else:
-            st.write(resume_text + job_desc_text)
+            # HF_TOKEN environement variable should be set to the huggingface token of the user
+            cover_maker = utils.CoverLetterMaker(resume=resume_text, job_desc=job_desc_text)
+            st.write(cover_maker.generate_letter(max_tokens=500))
 
 
     
