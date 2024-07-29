@@ -34,15 +34,19 @@ def ingest_document(stream):
 class CoverLetterMaker():
     
     def __init__(self, resume, job_desc, model_id="microsoft/Phi-3-mini-4k-instruct"):
+        # model_id is the id of the huggingface repository of the model
         self.model_id = model_id
         
+        # user prompt to generate cover letter
         self.user_content =  "Write in a simple but professional way a cover letter based on my resume and the description of the job i am applying for below  :\n Resume: " + resume + "\n Job description: " + job_desc
         
+        # get the token from HF_TOKEN environement variable
         hf_token = os.environ.get('HF_TOKEN')
         self.api_token = hf_token
         
         self.inference_client = InferenceClient(model=model_id, token=hf_token, timeout=120)
         
+        # prompt messages structure (system role is used in order to supervise the model's behaviour)
         self.messages = [
     {
         "role": "system",
@@ -55,5 +59,6 @@ class CoverLetterMaker():
 ]
     
     def generate_letter(self, max_tokens=500):
+        # call the inference api and generate answers
         data = self.inference_client.chat_completion(self.messages, max_tokens=max_tokens)
         return data.choices[0].message.content
