@@ -30,18 +30,36 @@ def ingest_document(stream):
 
 st.title("Welcome to the AI Cover Letter Generator :sparkles:")
 
+# get resume and cover letter uploaded
+uploaded_resume = st.file_uploader('Upload your resume :point_down:', type=["pdf","docx"], key="resume doc upload")
+uploaded_job_description = None
+filled_job_description = ""
+option = st.selectbox(
+"How would you like to enter the job description?",
+("pdf/docx", "Text"),)
+
+match option:
+
+    case "pdf/docx":
+        uploaded_job_description = st.file_uploader('Upload the description of the job you\'re wishing to apply for :point_down:', type=["pdf","docx"],key="job desc doc upload")
+
+    case "Text":
+        filled_job_description = st.text_input('Input the description of the job you\'re wishing to apply for :point_down:')
+
+
 # create a form in order to only run the code below if a submit button is pressed
 with st.form("my_form"):
-    # get resume and cover letter uploaded
-    uploaded_resume = st.file_uploader('Upload your resume :point_down:', type=["pdf","docx"])
-    uploaded_job_description = st.file_uploader('Upload the description of the job you\'re wishing to apply for :point_down:', type=["pdf","docx"])
-    resume_text = ""
 
+    resume_text = ""
+    job_desc_text = ""
     # ingest uploaded documents
     if uploaded_resume is not None:
         resume_text += ingest_document(uploaded_resume)
+
     if uploaded_job_description is not None:
-        resume_text += ingest_document(uploaded_job_description)
+        job_desc_text += ingest_document(uploaded_job_description)
+    elif len(filled_job_description) != 0:
+        job_desc_text += filled_job_description
 
     # if the submit button is pressed execute code inside the if statement
     submitted = st.form_submit_button("Generate Cover Letter :printer:")
@@ -49,10 +67,10 @@ with st.form("my_form"):
         # display errors if one of the files required is not uploaded
         if uploaded_resume is None:
             st.error("Your Resume is missing! :rotating_light:")
-        elif uploaded_job_description is None:
+        elif uploaded_job_description is None and len(filled_job_description)==0:
             st.error("The job description is missing! :rotating_light:")
         else:
-            st.write(resume_text)
+            st.write(resume_text + job_desc_text)
 
 
     
