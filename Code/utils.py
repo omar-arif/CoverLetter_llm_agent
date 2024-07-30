@@ -33,32 +33,46 @@ def ingest_document(stream):
 
 class CoverLetterMaker():
     
-    def __init__(self, resume, job_desc, model_id="microsoft/Phi-3-mini-4k-instruct"):
+    def __init__(self, resume, job_desc, model_id="mistralai/Mistral-Nemo-Instruct-2407", language="English", word_count=350):
         # model_id is the id of the huggingface repository of the model
         self.model_id = model_id
-        
-        # user prompt to generate cover letter
-        self.user_content =  "Write in a simple but professional way a cover letter based on my resume and the description of the job i am applying for below  :\n Resume: " + resume + "\n Job description: " + job_desc
-        
+        self.language = language
+        self.word_count = word_count
+
+        # prompt messages structure : system role is used in order to supervise the model's behaviour, user role is used to ask for the generation of the cover letter
+        match self.language:
+            case "English":
+                self.messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant that specializes in helping candidates to write and format their cover letters. Your will use the language they use to speak to you",
+            },
+            {
+                "role": "user",
+                "content": "whitout any headers, write in less than " + str(self.word_count) + "words a simple but professional way, a cover letter based on my resume and the description of the job I am applying for below  :\n Resume: " + resume + "\n Job description: " + job_desc,
+            },
+        ]
+            case "Français":
+                self.messages = [
+            {
+                "role": "system",
+                "content": "Vous êtes un assistant utile qui se spécialise dans l'aide aux candidats pour rédiger et mettre en forme leurs lettres de motivation.",
+            },
+            {
+                "role": "user",
+                "content": "Sans aucune entête, écrivez en moins de " + str(self.word_count*0.75) + "mots et de manière simple mais professionnelle une lettre de motivation basée sur mon CV et l'offre d'emploi du poste auquel je postule ci-dessous  :\n CV: " + resume + "\n offre d'emploi: " + job_desc,
+            },
+        ]
+                
         # get the token from HF_TOKEN environement variable
         hf_token = os.environ.get('HF_TOKEN')
         self.api_token = hf_token
         
         self.inference_client = InferenceClient(model=model_id, token=hf_token, timeout=120)
-        
-        # prompt messages structure (system role is used in order to supervise the model's behaviour)
-        self.messages = [
-    {
-        "role": "system",
-        "content": "You are a helpful assistant that specializes in helping candidates to write and format their cover letters. Your are fluent in both french and english",
-    },
-    {
-        "role": "user",
-        "content": self.user_content,
-    },
-]
     
-    def generate_letter(self, max_tokens=500):
+    def generate_letter(self):
+        # convert word count to number of tokens and add a safety margin
+        token_number = int(self.word_count//0.75) + 100
         # call the inference api and generate answers
-        data = self.inference_client.chat_completion(self.messages, max_tokens=max_tokens)
+        data = self.inference_client.chat_completion(self.messages, max_tokens=token_number)
         return data.choices[0].message.content
