@@ -23,6 +23,10 @@ with st.container(border=True):
         case "Text":
             filled_job_description = st.text_area('Input the description of the job you\'re wishing to apply for :point_down:', max_chars=5000)
 
+with st.container(border=True):
+    language = st.radio(
+    "Which language would you like to use",
+    ("Français", "English"),)
 
 # create a form in order to only run the code below if a submit button is pressed
 with st.form("generator_form", border=False):
@@ -50,7 +54,7 @@ with st.form("generator_form", border=False):
             st.error("The job description is missing! :rotating_light:")
         else:
             # HF_TOKEN environement variable should be set to the huggingface token of the user
-            cover_maker = utils.CoverLetterMaker(resume=resume_text, job_desc=job_desc_text)
+            cover_maker = utils.CoverLetterMaker(resume=resume_text, job_desc=job_desc_text, language=language)
             st.write(cover_maker.generate_letter(max_tokens=500))
 
 
