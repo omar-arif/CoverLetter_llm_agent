@@ -72,7 +72,7 @@ class CoverLetterMaker():
     
     def generate_letter(self):
         # convert word count to number of tokens and add a safety margin
-        token_number = int(self.word_count//0.75) + 100
+        token_number = int(self.word_count//0.7) + 100
         # call the inference api and generate answers
         data = self.inference_client.chat_completion(self.messages, max_tokens=token_number)
         return data.choices[0].message.content
